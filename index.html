@@ -412,6 +412,154 @@
     color: #4c5c72;
   }
 
+  /* ---------- 全班排名榜 ---------- */
+
+  .rank-toggle {
+    width: 100%;
+    height: 52px;
+    margin-top: 20px;
+    border: 1px solid rgba(52, 211, 153, .35);
+    border-radius: 16px;
+    background: linear-gradient(180deg, rgba(52, 211, 153, .16), rgba(52, 211, 153, .07));
+    color: #a7f3d0;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    box-shadow: 0 10px 24px -16px rgba(34, 197, 94, .8);
+  }
+
+  .rank-toggle:hover:not(:disabled) {
+    background: linear-gradient(180deg, rgba(52, 211, 153, .22), rgba(52, 211, 153, .1));
+    transform: translateY(-1px);
+  }
+
+  .rank-panel {
+    width: 100%;
+    max-width: 520px;
+    margin-top: 16px;
+    scroll-margin-top: 20px;
+  }
+
+  .rank-panel[hidden] { display: none; }
+
+  .rank-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .rank-head h2 {
+    margin: 0;
+    font-size: 18px;
+    letter-spacing: -.01em;
+  }
+
+  .rank-sub {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .csv-btn {
+    flex: none;
+    height: 38px;
+    margin: 0;
+    padding: 0 13px;
+    border: 1px solid rgba(52, 211, 153, .3);
+    border-radius: 11px;
+    background: rgba(52, 211, 153, .08);
+    color: #7ee2b8;
+    font-size: 12.5px;
+    font-weight: 700;
+    box-shadow: none;
+  }
+
+  .csv-btn:hover:not(:disabled) {
+    background: rgba(52, 211, 153, .14);
+    transform: none;
+  }
+
+  .rank-hint {
+    margin: 12px 2px 10px;
+    font-size: 12px;
+    color: #6e8099;
+  }
+
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: #0b1119;
+  }
+
+  .rank-table {
+    width: 700px;
+    min-width: 700px;
+    table-layout: fixed;
+    border-collapse: separate;
+    border-spacing: 0;
+    white-space: nowrap;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rank-table th,
+  .rank-table td {
+    padding: 11px 8px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, .055);
+  }
+
+  .rank-table thead th {
+    background: #18212f;
+    color: #9fb0c6;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .04em;
+  }
+
+  .rank-table tbody tr:nth-child(odd) td { background: #0f1620; }
+  .rank-table tbody tr:nth-child(even) td { background: #0c121a; }
+
+  .rank-table tbody tr:last-child td { border-bottom: 0; }
+
+  .rank-table th.sticky,
+  .rank-table td.sticky {
+    position: sticky;
+    z-index: 10;
+  }
+
+  .rank-table .col-rank { left: 0; }
+
+  .rank-table .col-name {
+    left: 62px;
+    box-shadow: 1px 0 0 rgba(255, 255, 255, .07);
+  }
+
+  .rank-table td.col-name {
+    text-align: left;
+    padding-left: 12px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rank-table td.col-rank { color: #8a9ab0; }
+
+  .rank-table td.total {
+    color: #7ee2b8;
+    font-weight: 700;
+  }
+
+  .rank-empty {
+    margin: 0;
+    padding: 22px 10px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+  }
+
   /* ---------- 重名学生选择 ---------- */
 
   .modal {
@@ -547,7 +695,51 @@
 
   <p class="msg" id="msg" aria-live="polite"></p>
   <p class="meta" id="meta">正在加载成绩数据…</p>
+
+  <button type="button" class="rank-toggle" id="rankToggle" disabled>🏆 查看全班排名榜</button>
 </main>
+
+<section class="rank-panel" id="rankPanel" hidden>
+  <div class="rank-head">
+    <div>
+      <h2 id="rankTitle">全班排名榜</h2>
+      <p class="rank-sub" id="rankSub">按总分从高到低排序</p>
+    </div>
+    <button type="button" class="csv-btn" id="csvBtn">📥 导出为 CSV</button>
+  </div>
+
+  <p class="rank-hint">💡 提示：左右滑动可查看各科成绩</p>
+
+  <div class="table-responsive">
+    <table class="rank-table">
+      <colgroup>
+        <col style="width:62px">
+        <col style="width:94px">
+        <col style="width:88px">
+        <col style="width:76px">
+        <col style="width:76px">
+        <col style="width:76px">
+        <col style="width:76px">
+        <col style="width:76px">
+        <col style="width:76px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="sticky col-rank">名次</th>
+          <th class="sticky col-name">姓名</th>
+          <th>总分</th>
+          <th>语文</th>
+          <th>数学</th>
+          <th>外语</th>
+          <th>物理</th>
+          <th>化学</th>
+          <th>生物</th>
+        </tr>
+      </thead>
+      <tbody id="rankBody"></tbody>
+    </table>
+  </div>
+</section>
 
 <section class="card" id="card" hidden aria-live="polite">
   <div class="card-head">
@@ -601,6 +793,15 @@
   var card = document.getElementById('card');
   var inputWrap = document.getElementById('inputWrap');
 
+  var rankPanel = document.getElementById('rankPanel');
+  var rankToggle = document.getElementById('rankToggle');
+  var rankBody = document.getElementById('rankBody');
+  var rankTitle = document.getElementById('rankTitle');
+  var rankSub = document.getElementById('rankSub');
+  var csvBtn = document.getElementById('csvBtn');
+
+  var SUBJECT_KEYS = ['语文', '数学', '外语', '物理', '化学', '生物'];
+
   var pickModal = document.getElementById('pickModal');
   var pickList = document.getElementById('pickList');
   var pickTitle = document.getElementById('pickTitle');
@@ -609,6 +810,8 @@
 
   var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var index = new Map(); // 班级 + \u0000 + 姓名 => [记录, ...]
+  var allRecords = [];
+  var rankRows = [];
   var loaded = false;
   var lastFocus = null;
 
@@ -674,6 +877,173 @@
     setTimeout(function () {
       card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
+  }
+
+  /* ---------- 全班排名榜 ---------- */
+
+  function totalOf(rec) {
+    var raw = rec.total_score;
+    if (raw === null || raw === undefined || String(raw).trim() === '') {
+      var sum = 0;
+      var scores = (rec.subjects && typeof rec.subjects === 'object') ? rec.subjects : {};
+      Object.keys(scores).forEach(function (k) {
+        var n = Number(scores[k]);
+        if (isFinite(n)) sum += n;
+      });
+      return Math.round(sum * 100) / 100;
+    }
+    var n = Number(raw);
+    return isFinite(n) ? Math.round(n * 100) / 100 : 0;
+  }
+
+  function buildRanking(cls) {
+    var items = [];
+    allRecords.forEach(function (rec) {
+      var c = String(rec['class'] == null ? '' : rec['class']).trim();
+      if (c !== cls) return;
+      items.push({ rec: rec, total: totalOf(rec) });
+    });
+
+    items.sort(function (a, b) {
+      if (b.total !== a.total) return b.total - a.total;
+      return String(a.rec.name).localeCompare(String(b.rec.name), 'zh-Hans-CN');
+    });
+
+    var prev = null;
+    var rank = 0;
+    items.forEach(function (it, i) {
+      if (prev === null || it.total !== prev) {
+        rank = i + 1;
+        prev = it.total;
+      }
+      it.rank = rank;
+    });
+
+    return items;
+  }
+
+  function renderRanking() {
+    var cls = select.value;
+    if (!cls) {
+      closeRanking();
+      showMsg('请先选择班级');
+      select.focus();
+      return;
+    }
+
+    rankRows = buildRanking(cls);
+    rankTitle.textContent = classText(cls) + ' 全班排名榜';
+    rankSub.textContent = '共 ' + rankRows.length + ' 人 · 按总分从高到低排序';
+
+    rankBody.textContent = '';
+
+    if (!rankRows.length) {
+      var emptyRow = document.createElement('tr');
+      var emptyCell = document.createElement('td');
+      emptyCell.colSpan = 9;
+      emptyCell.className = 'rank-empty';
+      emptyCell.textContent = '该班级暂无成绩数据';
+      emptyRow.appendChild(emptyCell);
+      rankBody.appendChild(emptyRow);
+      return;
+    }
+
+    rankRows.forEach(function (it) {
+      var rec = it.rec;
+      var tr = document.createElement('tr');
+
+      var tdRank = document.createElement('td');
+      tdRank.className = 'sticky col-rank';
+      tdRank.textContent = String(it.rank);
+      tr.appendChild(tdRank);
+
+      var tdName = document.createElement('td');
+      tdName.className = 'sticky col-name';
+      tdName.textContent = String(rec.name == null ? '' : rec.name);
+      tr.appendChild(tdName);
+
+      var tdTotal = document.createElement('td');
+      tdTotal.className = 'total';
+      tdTotal.textContent = fmt(it.total);
+      tr.appendChild(tdTotal);
+
+      SUBJECT_KEYS.forEach(function (k) {
+        var td = document.createElement('td');
+        var v = (rec.subjects && typeof rec.subjects === 'object') ? rec.subjects[k] : '';
+        td.textContent = (v === null || v === undefined || String(v).trim() === '') ? '-' : fmt(v);
+        tr.appendChild(td);
+      });
+
+      rankBody.appendChild(tr);
+    });
+  }
+
+  function closeRanking() {
+    rankPanel.hidden = true;
+    rankToggle.textContent = '🏆 查看全班排名榜';
+  }
+
+  function toggleRanking() {
+    if (!rankPanel.hidden) {
+      closeRanking();
+      return;
+    }
+
+    var cls = select.value;
+    if (!cls) {
+      showMsg('请先选择班级');
+      select.focus();
+      return;
+    }
+
+    showMsg('');
+    renderRanking();
+    rankPanel.hidden = false;
+    rankToggle.textContent = '收起排名榜';
+
+    if (!reduced) {
+      setTimeout(function () {
+        rankPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 60);
+    }
+  }
+
+  function csvCell(v) {
+    var s = String(v == null ? '' : v);
+    if (/[",\r\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function saveFile(name, text, mime) {
+    var blob = new Blob([text], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  }
+
+  function exportCsv() {
+    if (!rankRows.length) return;
+
+    var lines = [];
+    lines.push(['名次', '姓名', '总分'].concat(SUBJECT_KEYS).map(csvCell).join(','));
+
+    rankRows.forEach(function (it) {
+      var rec = it.rec;
+      var row = [it.rank, rec.name, it.total];
+      SUBJECT_KEYS.forEach(function (k) {
+        var v = (rec.subjects && typeof rec.subjects === 'object') ? rec.subjects[k] : '';
+        row.push(v === null || v === undefined ? '' : v);
+      });
+      lines.push(row.map(csvCell).join(','));
+    });
+
+    saveFile('班级成绩排名.csv', '\uFEFF' + lines.join('\r\n'), 'text/csv;charset=utf-8');
   }
 
   /* ---------- 渲染 ---------- */
@@ -869,6 +1239,7 @@
         if (!cls || !key) return;
 
         classMap[cls] = true;
+        allRecords.push(rec);
         var id = cls + '\u0000' + key;
         if (!index.has(id)) index.set(id, []);
         index.get(id).push(rec);
@@ -887,6 +1258,7 @@
       select.disabled = false;
       input.disabled = false;
       btn.disabled = false;
+      rankToggle.disabled = false;
       syncSelectStyle();
 
       metaEl.textContent = '已加载 ' + data.length + ' 名同学 · ' + classes.length + ' 个班级 · 数据仅存于本机';
@@ -940,7 +1312,15 @@
     syncSelectStyle();
     if (msgEl.textContent) showMsg('');
     hideCard();
+
+    if (!rankPanel.hidden) {
+      if (select.value) renderRanking();
+      else closeRanking();
+    }
   });
+
+  rankToggle.addEventListener('click', toggleRanking);
+  csvBtn.addEventListener('click', exportCsv);
 
   pickCancel.addEventListener('click', closePicker);
 
