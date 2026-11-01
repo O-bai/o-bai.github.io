@@ -703,7 +703,7 @@
   <div class="rank-head">
     <div>
       <h2 id="rankTitle">全班排名榜</h2>
-      <p class="rank-sub" id="rankSub">按总分从高到低排序</p>
+      <p class="rank-sub" id="rankSub">按赋分总分从高到低排序</p>
     </div>
     <button type="button" class="csv-btn" id="csvBtn">📥 导出为 CSV</button>
   </div>
@@ -882,18 +882,26 @@
   /* ---------- 全班排名榜 ---------- */
 
   function totalOf(rec) {
-    var raw = rec.total_score;
-    if (raw === null || raw === undefined || String(raw).trim() === '') {
-      var sum = 0;
-      var scores = (rec.subjects && typeof rec.subjects === 'object') ? rec.subjects : {};
-      Object.keys(scores).forEach(function (k) {
-        var n = Number(scores[k]);
-        if (isFinite(n)) sum += n;
-      });
-      return Math.round(sum * 100) / 100;
+    // 排名榜按“赋分总分”排序；缺失时依次回退到卷面总分、各科求和
+    var f = rec.fufen_total;
+    if (f !== null && f !== undefined && String(f).trim() !== '') {
+      var fn = Number(f);
+      if (isFinite(fn)) return Math.round(fn * 100) / 100;
     }
-    var n = Number(raw);
-    return isFinite(n) ? Math.round(n * 100) / 100 : 0;
+
+    var raw = rec.total_score;
+    if (raw !== null && raw !== undefined && String(raw).trim() !== '') {
+      var rn = Number(raw);
+      if (isFinite(rn)) return Math.round(rn * 100) / 100;
+    }
+
+    var sum = 0;
+    var scores = (rec.subjects && typeof rec.subjects === 'object') ? rec.subjects : {};
+    Object.keys(scores).forEach(function (k) {
+      var n = Number(scores[k]);
+      if (isFinite(n)) sum += n;
+    });
+    return Math.round(sum * 100) / 100;
   }
 
   function buildRanking(cls) {
@@ -933,7 +941,7 @@
 
     rankRows = buildRanking(cls);
     rankTitle.textContent = classText(cls) + ' 全班排名榜';
-    rankSub.textContent = '共 ' + rankRows.length + ' 人 · 按总分从高到低排序';
+    rankSub.textContent = '共 ' + rankRows.length + ' 人 · 按赋分总分从高到低排序';
 
     rankBody.textContent = '';
 
