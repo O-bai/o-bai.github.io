@@ -126,6 +126,44 @@
 
   .input-wrap { display: flex; gap: 10px; margin-top: 10px; }
 
+  .pass-wrap {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .pass-wrap[hidden] { display: none; }
+
+  .pass-wrap input {
+    flex: 1;
+    min-width: 0;
+    height: 54px;
+    padding: 0 18px;
+    border-radius: 16px;
+    border: 1px solid var(--line);
+    background: rgba(255, 255, 255, .045);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 16px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s, background .2s;
+  }
+
+  .pass-wrap input::placeholder { color: #5f7089; }
+
+  .pass-wrap input:focus {
+    border-color: rgba(52, 211, 153, .55);
+    box-shadow: 0 0 0 4px rgba(52, 211, 153, .12);
+    background: rgba(255, 255, 255, .06);
+  }
+
+  .pass-btn {
+    flex: none;
+    height: 54px;
+    margin: 0;
+    padding: 0 22px;
+  }
+
   input[type="text"] {
     flex: 1;
     min-width: 0;
@@ -687,6 +725,11 @@
     </select>
   </div>
 
+  <div class="pass-wrap" id="passWrap" hidden>
+    <input id="classPass" type="password" placeholder="请输入班级密码" autocomplete="current-password" enterkeyhint="go">
+    <button type="button" class="pass-btn" id="passBtn">验证</button>
+  </div>
+
   <div class="input-wrap" id="inputWrap">
     <input id="nameInput" type="text" placeholder="请输入姓名" autocomplete="off"
            autocapitalize="off" spellcheck="false" enterkeyhint="search" disabled>
@@ -785,6 +828,13 @@
 (function () {
   'use strict';
 
+  // 班级访问密码：空字符串表示该班级无需密码
+  const CLASS_PASSWORDS = {
+    '774': '',
+    '732': '888888',
+    '733': '123456'
+  };
+
   var select = document.getElementById('inpClass');
   var input = document.getElementById('nameInput');
   var btn = document.getElementById('queryBtn');
@@ -800,6 +850,10 @@
   var rankSub = document.getElementById('rankSub');
   var csvBtn = document.getElementById('csvBtn');
 
+  var passWrap = document.getElementById('passWrap');
+  var passInput = document.getElementById('classPass');
+  var passBtn = document.getElementById('passBtn');
+
   var SUBJECT_KEYS = ['语文', '数学', '外语', '物理', '化学', '生物'];
 
   var pickModal = document.getElementById('pickModal');
@@ -812,6 +866,7 @@
   var index = new Map(); // 班级 + \u0000 + 姓名 => [记录, ...]
   var allRecords = [];
   var rankRows = [];
+  var unlockedClasses = {};
   var loaded = false;
   var lastFocus = null;
 
@@ -877,6 +932,63 @@
     setTimeout(function () {
       card.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
+  }
+
+  /* ---------- 班级密码 ---------- */
+
+  function classPassword(cls) {
+    if (!cls) return '';
+    if (!Object.prototype.hasOwnProperty.call(CLASS_PASSWORDS, cls)) return '';
+    return String(CLASS_PASSWORDS[cls] || '');
+  }
+
+  function classUnlocked(cls) {
+    if (!cls) return false;
+    return classPassword(cls) === '' || unlockedClasses[cls] === true;
+  }
+
+  function updateClassGate() {
+    var cls = select.value;
+    var needPass = cls !== '' && classPassword(cls) !== '' && unlockedClasses[cls] !== true;
+
+    passWrap.hidden = !needPass;
+
+    if (needPass) {
+      input.disabled = true;
+      btn.disabled = true;
+      rankToggle.disabled = true;
+    } else if (loaded) {
+      input.disabled = false;
+      btn.disabled = false;
+      rankToggle.disabled = false;
+    }
+  }
+
+  function verifyClassPassword() {
+    var cls = select.value;
+    if (!cls) {
+      showMsg('请先选择班级');
+      return;
+    }
+
+    var pwd = classPassword(cls);
+    if (pwd === '' || unlockedClasses[cls] === true) {
+      updateClassGate();
+      input.focus();
+      return;
+    }
+
+    if (passInput.value === pwd) {
+      unlockedClasses[cls] = true;
+      passInput.value = '';
+      showMsg('');
+      updateClassGate();
+      input.focus();
+    } else {
+      showMsg('密码错误，请重新输入');
+      passInput.value = '';
+      passInput.focus();
+    }
   }
 
   /* ---------- 全班排名榜 ---------- */
@@ -1001,6 +1113,12 @@
     if (!cls) {
       showMsg('请先选择班级');
       select.focus();
+      return;
+    }
+
+    if (!classUnlocked(cls)) {
+      showMsg('该班级需要密码，请先输入班级密码');
+      passInput.focus();
       return;
     }
 
@@ -1202,6 +1320,12 @@
     var cls = select.value;
     var key = norm(input.value);
 
+    if (cls && !classUnlocked(cls)) {
+      showMsg('该班级需要密码，请先输入班级密码');
+      passInput.focus();
+      return;
+    }
+
     if (!cls || !key) {
       showMsg('请选择班级并输入姓名');
       if (!cls) select.focus();
@@ -1284,9 +1408,13 @@
         syncSelectStyle();
       }
 
-      if (presetName) {
-        input.value = presetName;
+      if (presetName) input.value = presetName;
+      updateClassGate();
+
+      if (presetName && classUnlocked(select.value)) {
         query();
+      } else if (select.value && !classUnlocked(select.value)) {
+        passInput.focus();
       } else {
         select.focus({ preventScroll: true });
       }
@@ -1321,14 +1449,26 @@
     if (msgEl.textContent) showMsg('');
     hideCard();
 
+    passInput.value = '';
+    updateClassGate();
+    if (!passWrap.hidden) passInput.focus();
+
     if (!rankPanel.hidden) {
-      if (select.value) renderRanking();
+      if (select.value && classUnlocked(select.value)) renderRanking();
       else closeRanking();
     }
   });
 
   rankToggle.addEventListener('click', toggleRanking);
   csvBtn.addEventListener('click', exportCsv);
+
+  passBtn.addEventListener('click', verifyClassPassword);
+  passInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      verifyClassPassword();
+    }
+  });
 
   pickCancel.addEventListener('click', closePicker);
 
