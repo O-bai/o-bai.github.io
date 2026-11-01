@@ -357,7 +357,7 @@
 
   .subject {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 8px;
     padding: 13px 14px;
@@ -373,6 +373,21 @@
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     color: #f2f7ff;
+  }
+
+  .subject .sc {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+  }
+
+  .subject .yf {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .02em;
+    color: #7ee2b8;
+    white-space: nowrap;
   }
 
   .subject.show {
@@ -693,12 +708,22 @@
     var grid = document.getElementById('sGrid');
     grid.textContent = '';
 
+    function hasVal(v) {
+      return v !== null && v !== undefined && String(v).trim() !== '';
+    }
+
     var scores = (rec.subjects && typeof rec.subjects === 'object') ? rec.subjects
                : (rec.scores && typeof rec.scores === 'object') ? rec.scores
                : {};
-    var entries = Object.keys(scores).filter(function (k) {
-      var v = scores[k];
-      return k && v !== null && v !== undefined && String(v).trim() !== '';
+    var fufen = (rec.subjects_fufen && typeof rec.subjects_fufen === 'object') ? rec.subjects_fufen : {};
+
+    var names = Object.keys(scores);
+    Object.keys(fufen).forEach(function (k) {
+      if (names.indexOf(k) === -1) names.push(k);
+    });
+
+    var entries = names.filter(function (k) {
+      return k && (hasVal(scores[k]) || hasVal(fufen[k]));
     });
 
     if (!entries.length) {
@@ -716,12 +741,23 @@
         kk.className = 'k';
         kk.textContent = k;
 
+        var sc = document.createElement('span');
+        sc.className = 'sc';
+
         var vv = document.createElement('span');
         vv.className = 'v';
-        vv.textContent = fmt(scores[k]);
+        vv.textContent = hasVal(scores[k]) ? fmt(scores[k]) : '-';
+        sc.appendChild(vv);
+
+        if (hasVal(fufen[k])) {
+          var yf = document.createElement('span');
+          yf.className = 'yf';
+          yf.textContent = '赋分 ' + fmt(fufen[k]);
+          sc.appendChild(yf);
+        }
 
         item.appendChild(kk);
-        item.appendChild(vv);
+        item.appendChild(sc);
         grid.appendChild(item);
       });
     }
